@@ -1,0 +1,25 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'polls/style.css' %}">
+
+<body>
+    <div class="container">
+        <h1>Спасибо, что проголосовали за<br>поправки в Конституцию!</h1>
+        <form action="{% url 'polls:vote' question.id %}" method="post">
+            <div class="custom-list">
+                {% csrf_token %}
+                <fieldset class="choices-container">
+                    {% for choice in question.choice_set.all %}
+                        <div class="choice-item">
+                            <li>{{ choice.choice_text }} - {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+                        </div>
+                {% endfor %}
+                </fieldset>
+            </div>
+            <div class="center-container">
+                <a href="{% url 'polls:detail' question.id %}" class="button-link">VOTE AGAIN</a>
+            </div>
+        </form>
+    </div>
+</body>
+

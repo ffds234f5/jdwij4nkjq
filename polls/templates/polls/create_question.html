@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Создание нового опроса</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}">
+    <script>
+        let choiceCount = 1;
+
+        function addChoiceField() {
+            const container = document.getElementById('choices-container');
+            const newField = document.createElement('div');
+            newField.innerHTML = `
+                <div class="choice-field">
+                    <input type="text" name="choice_${choiceCount}" id="id_choice_${choiceCount}" class="form-input" placeholder="Вариант ${choiceCount + 1}" required>
+                </div>
+            `;
+            container.appendChild(newField);
+            choiceCount++;
+            const addButton = document.getElementById('add-choice-button');
+            container.appendChild(addButton);
+        }
+    </script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            margin: 0;
+        }
+        h2 {
+            font-size: 20px;
+            text-align: center;
+            color: #4A4A4A;
+            margin: 10px 0;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 0;
+            width: 100%;
+            border-radius: 10px;
+        }
+        .form-input {
+            height: 40px;
+            width: 200px;
+            box-sizing: border-box;
+            border: 1px solid #fff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            line-height: normal;
+        }
+        .choice-field {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+            justify-content: center;
+            width: 200px;
+        }
+        .add-choice-button {
+            height: 40px;
+            width: 200px;
+            box-sizing: border-box;
+            cursor: pointer;
+            background-color: #FFFFFF;
+            color: #333333;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        .add-choice-button:hover {
+            transform: scale(1.01);
+            color: #757ecb;
+            transition: color 0.3s;
+        }
+        .submit-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+{% include "navbar.html" %}
+<div class="container">
+
+    <h1>Создание нового опроса</h1> <br>
+    <form method="post" class="form-container">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="text" name="question_text" id="id_question_text" class="form-input" placeholder="Текст опроса" required>
+        </div>
+        <div class="form-group">
+            <input type="datetime-local" name="pub_date" id="id_pub_date" class="form-input" required>
+        </div><br>
+        <h2>Варианты ответов</h2>
+        <div id="choices-container" class="form-group">
+            <div class="choice-field">
+                <input type="text" name="choice_0" id="id_choice_0" class="form-input" placeholder="Вариант 1" required>
+            </div>
+        </div>
+        <button type="button" id="add-choice-button" onclick="addChoiceField()" class="add-choice-button">+</button>
+        <br>
+        <button type="submit" class="button-link">Создать опрос</button>
+    </form>
+</div>
+</body>
+</html>

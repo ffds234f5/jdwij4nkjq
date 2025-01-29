@@ -18,10 +18,13 @@
             background-color: #f9f9f9;
         }
         .container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
             text-align: center;
+        }
+        .form-container {
+            display: inline-block;
+            text-align: left;
+            padding: 20px;
+
         }
         h1 {
             font-size: 24px;
@@ -39,21 +42,6 @@
             font-size: 16px;
             color: #555;
         }
-        button {
-            display: inline-block;
-            margin: 10px auto;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
         p {
             font-size: 14px;
             color: #555;
@@ -66,6 +54,12 @@
         a:hover {
             color: #0056b3;
         }
+
+        button.button-link {
+            display: block;
+            margin: 20px auto 0;
+        }
+
     </style>
 </head>
 <body>
@@ -75,19 +69,21 @@
             <p style="color: red;">{{ error_message }}</p>
         {% endif %}
         {% if not user_has_voted %}
-            <form action="{% url 'polls:vote' question.id %}" method="post">
-                {% csrf_token %}
-                {% for choice in question.choice_set.all %}
-                    <div>
-                        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
-                        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label>
-                    </div>
-                {% endfor %}
-                <button type="submit">Голосовать</button>
-            </form>
+            <div class="form-container">
+                <form action="{% url 'polls:vote' question.id %}" method="post">
+                    {% csrf_token %}
+                    {% for choice in question.choice_set.all %}
+                        <div>
+                            <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                            <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label>
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="button-link">Голосовать</button>
+                </form>
+            </div>
         {% else %}
-            <p style="color: blue; font-size=40px;">Вы уже проголосовали в этом опросе.</p>
-            <a href="{% url 'polls:results' question.id %}" class="button-link">результаты</a>
+            <p style="color: blue; font-size: 14px;">Вы уже проголосовали в этом опросе.</p>
+            <a href="{% url 'polls:results' question.id %}" class="button-link">Результаты</a>
         {% endif %}
     </div>
 </body>

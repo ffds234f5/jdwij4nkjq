@@ -1,0 +1,16 @@
+#cat-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999999;
+    pointer-events: none;
+}
+
+#cat {
+    width: 100px;
+    height: auto;
+    position: absolute;
+    cursor: grab;
+    pointer-events: auto;
+}

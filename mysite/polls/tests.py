@@ -50,4 +50,34 @@ class QuestionIndexViewTests(TestCase):
         )
 
 
-# Create your tests here.
+from django.test import TestCase, Client
+from polls.models import Question, Choice, Vote
+from django.contrib.auth.models import User
+
+class PollsTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='superpuperpass123')
+        self.question = Question.objects.create(question_text="Test Question", pub_date=timezone.now(), created_by=self.user)
+        self.choice = Choice.objects.create(question=self.question, choice_text="Test Choice")
+
+    def test_vote_functionality(self):
+        self.client.login(username='testuser', password='superpuperpass123')
+        response = self.client.post(f'/polls/{self.question.id}/vote/', {'choice': self.choice.id})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Vote.objects.filter(user=self.user, choice=self.choice).exists())
+
+    def test_vote_limit(self):
+        self.client.login(username='testuser', password='superpuperpass123')
+        self.client.post(f'/polls/{self.question.id}/vote/', {'choice': self.choice.id})
+        response = self.client.post(f'/polls/{self.question.id}/vote/', {'choice': self.choice.id})
+        self.assertEqual(response.status_code, 302)
+        votes_count = Vote.objects.filter(user=self.user, choice=self.choice).count()
+        self.assertEqual(votes_count, 1)
+
+    def test_poll_completion(self):
+        self.question.is_active = False
+        self.question.save()
+        self.client.login(username='testuser', password='superpuperpass123')
+        response = self.client.get(f'/polls/{self.question.id}/')
+        self.assertEqual(response.status_code, 302)

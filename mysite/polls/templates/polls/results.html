@@ -1,25 +1,183 @@
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты опроса</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(45deg, #c6e4ee 0%, #c6e4ee 40%, #fed1ae 60%, #faa0b9 70%, #cb7dcb 80%, #757ecb 100%);
+            background-size: 300% 300%;
+            animation: gradientAnimation 12s ease infinite;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #4A4A4A;
+        }
 
-<link rel="stylesheet" href="{% static 'polls/style.css' %}">
+        h1 {
+            text-align: center;
+            color: #4A4A4A;
+            margin-bottom: 20px;
+        }
 
+        .legend {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .chart-container {
+            width: 80%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .answer-description {
+            margin-top: 20px;
+            width: 20%;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+            font-size: 14px;
+            color: #4A4A4A;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
 <body>
-    <div class="container">
-        <h1>Спасибо, что проголосовали за<br>поправки в Конституцию!</h1>
-        <form action="{% url 'polls:vote' question.id %}" method="post">
-            <div class="custom-list">
-                {% csrf_token %}
-                <fieldset class="choices-container">
-                    {% for choice in question.choice_set.all %}
-                        <div class="choice-item">
-                            <li>{{ choice.choice_text }} - {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
-                        </div>
-                {% endfor %}
-                </fieldset>
-            </div>
-            <div class="center-container">
-                <a href="{% url 'polls:detail' question.id %}" class="button-link">VOTE AGAIN</a>
-            </div>
-        </form>
-    </div>
-</body>
+    {% include "navbar.html" %}
+    <h1>Результаты опроса: {{ question.question_text }}</h1>
 
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(54, 162, 235, 0.6);"></div>
+            <span>Мужчины</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 99, 132, 0.6);"></div>
+            <span>Женщины</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(75, 192, 192, 0.6);"></div>
+            <span>Трансформеры</span>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="genderChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="answer-description">
+        {% for choice in question.choice_set.all %}
+            <p><strong>{{ forloop.counter }}.</strong> {{ choice.choice_text }}</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        const genderStats = JSON.parse('{{ gender_stats|safe }}');
+        const labels = Object.keys(genderStats).map((_, index) => index + 1);
+        const maleData = Object.values(genderStats).map(stats => stats?.male || 0);
+        const femaleData = Object.values(genderStats).map(stats => stats?.female || 0);
+        const otherData = Object.values(genderStats).map(stats => stats?.other || 0);
+
+        const ctx = document.getElementById('genderChart').getContext('2d');
+        const genderChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Мужчины',
+                        data: maleData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Женщины',
+                        data: femaleData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Трансформеры',
+                        data: otherData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value}`;
+                            },
+                        },
+                    },
+                    legend: {
+                        display: false,
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#4A4A4A',
+                        },
+                        grid: {
+                            color: 'rgba(74, 74, 74, 0.3)',
+                            lineWidth: 2,
+                        },
+                    },
+                    y: {
+                        ticks: {
+                            color: '#4A4A4A',
+                        },
+                        grid: {
+                            color: 'rgba(74, 74, 74, 0.3)',
+                            lineWidth: 2,
+                        },
+                        beginAtZero: true,
+                    },
+                },
+            },
+        });
+    </script>
+</body>
+</html>

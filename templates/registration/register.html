@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="{% static 'polls/style.css' %}">
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 220px;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .error-message {
+            color: red !important;
+            font-size: 12px !important;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        form div {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #fff;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        input[type="text"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #aaa;
+        }
+
+        p {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        a {
+            text-decoration: underline;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    {% include "navbar.html" %}
+    <div class="container">
+        <h1>Регистрация</h1>
+
+        {% if form.non_field_errors %}
+            <p class="error-message">{{ form.non_field_errors }}</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div>
+
+                {% if form.username.errors %}
+                    <p class="error-message" >{{ form.username.errors }}</p>
+                {% endif %}
+                <input type="text" name="username" placeholder="Имя пользователя" required>
+            </div>
+            <div>
+
+                {% if form.password1.errors %}
+                    <p class="error-message">{{ form.password1.errors }}</p>
+                {% endif %}
+                <input type="password" name="password1" placeholder="Пароль" required>
+            </div>
+            <div>
+
+                {% if form.password2.errors %}
+                    <p class="error-message">{{ form.password2.errors }}</p>
+                {% endif %}
+                <input type="password" name="password2" placeholder="Подтверждение пароля" required>
+            </div>
+            <div>
+
+                {% if form.gender.errors %}
+                    <p class="error-message">{{ form.gender.errors }}</p>
+                {% endif %}
+                <select name="gender" required>
+                    <option value="" disabled selected>Выберите пол</option>
+                    <option value="male">Мужской</option>
+                    <option value="female">Женский</option>
+                    <option value="other">Другой</option>
+                </select>
+            </div>
+            <div id="custom-gender-field" style="display: none;">
+                <input type="text" name="custom_gender" placeholder="Укажите свой пол">
+            </div>
+            <button type="submit" class="button-link" style="display: block; margin: 30px auto; width: 200px;">Создать</button>
+        </form>
+        <ul style="margin-top: 5px;">
+            <li><a href="{% url 'accounts:login' %}" style="text-decoration: underline; font-size: 14px;">Уже есть аккаунт? Войдите</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const genderField = document.querySelector('select[name="gender"]');
+        const customGenderField = document.getElementById('custom-gender-field');
+        genderField.addEventListener('change', function () {
+            if (genderField.value === 'other') {
+                customGenderField.style.display = 'block';
+            } else {
+                customGenderField.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% load static %}
+<script src="{% static 'js/browserponies.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof browserponies === "undefined") {
+            console.error("Ошибка: browserponies.js не загружен!");
+            return;
+        }
+
+        browserponies.setBaseUrl("{% static 'js/ponies/' %}");
+        browserponies.load();
+        browserponies.start();
+        browserponies.spawn("Fluttershy");
+    });
+</script>

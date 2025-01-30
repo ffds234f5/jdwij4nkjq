@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты опроса</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(45deg, #c6e4ee 0%, #c6e4ee 40%, #fed1ae 60%, #faa0b9 70%, #cb7dcb 80%, #757ecb 100%);
+            background-size: 300% 300%;
+            animation: gradientAnimation 12s ease infinite;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #4A4A4A;
+            padding-top: 60px; /* Отступ сверху для навбара */
+        }
+        h1 {
+            text-align: center;
+            color: #4A4A4A;
+            margin-bottom: 20px;
+        }
+        .legend {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+        .chart-container,
+        .answer-description,
+        .comments-section {
+            width: 80%; /* Ширина всех блоков одинаковая */
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        .answer-description {
+            margin-top: 20px;
+            text-align: left;
+            font-size: 14px;
+            color: #4A4A4A;
+            margin-bottom: 40px; /* Отступ снизу для описания */
+        }
+        /* Стили для комментариев */
+        .comments-section h2 {
+            text-align: center; /* Заголовок "Комментарии" по центру */
+            margin-bottom: 20px;
+        }
+        .comment-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .comment-form textarea {
+            width: 80%;
+            max-width: 600px;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: none; /* Запрет изменения размера */
+        }
+        .button-link {
+            display: inline-block;
+            background: #ffffff;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 20px;
+        }
+        .button-link:hover {
+            transform: scale(1.01);
+            color: #757ecb;
+            transition: color 0.3s;
+        }
+        .button-link:active {
+            transform: scale(0.96);
+        }
+        .comment {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #888;
+            margin-left: 10px;
+        }
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+    {% include "navbar.html" %}
+    <h1>Результаты опроса: {{ question.question_text }}</h1>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(54, 162, 235, 0.6);"></div>
+            <span>Мужчины</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 99, 132, 0.6);"></div>
+            <span>Женщины</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(75, 192, 192, 0.6);"></div>
+            <span>Трансформеры</span>
+        </div>
+    </div>
+    <div class="chart-container">
+        <canvas id="genderChart" width="400" height="200"></canvas>
+    </div>
+    <div class="answer-description">
+        {% for choice in question.choice_set.all %}
+            <p><strong>{{ forloop.counter }}.</strong> {{ choice.choice_text }}</p>
+        {% endfor %}
+    </div>
+    <!-- Раздел комментариев -->
+    <div class="comments-section">
+        <h2>Комментарии</h2>
+        <!-- Форма для добавления комментария -->
+        {% if user.is_authenticated %}
+            <form method="post" class="comment-form">
+                {% csrf_token %}
+                <textarea name="content" placeholder="Напишите комментарий..."></textarea>
+                <button type="submit" class="button-link">Оставить комментарий</button>
+            </form>
+        {% else %}
+            <p style="text-align: center;">Чтобы оставлять комментарии, <a href="{% url 'login' %}">войдите</a>.</p>
+        {% endif %}
+        <!-- Список комментариев -->
+        <div class="comments">
+            {% for comment in comments %}
+                <div class="comment">
+                    <strong>{{ comment.author.username }}</strong>
+                    <span class="timestamp">{{ comment.created_at|date:"d.m.Y H:i" }}</span>
+                    <p>{{ comment.content }}</p>
+                </div>
+            {% empty %}
+                <p style="text-align: center;">Пока нет ни одного комментария.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        const genderStats = JSON.parse('{{ gender_stats|safe }}');
+        const labels = Object.keys(genderStats).map((_, index) => index + 1);
+        const maleData = Object.values(genderStats).map(stats => stats?.male || 0);
+        const femaleData = Object.values(genderStats).map(stats => stats?.female || 0);
+        const otherData = Object.values(genderStats).map(stats => stats?.other || 0);
+        const ctx = document.getElementById('genderChart').getContext('2d');
+        const genderChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Мужчины',
+                        data: maleData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Женщины',
+                        data: femaleData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Трансформеры',
+                        data: otherData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: '#4A4A4A',
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value}`;
+                            },
+                        },
+                    },
+                    legend: {
+                        display: false,
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#4A4A4A',
+                        },
+                        grid: {
+                            color: 'rgba(74, 74, 74, 0.3)',
+                            lineWidth: 2,
+                        },
+                    },
+                    y: {
+                        ticks: {
+                            color: '#4A4A4A',
+                        },
+                        grid: {
+                            color: 'rgba(74, 74, 74, 0.3)',
+                            lineWidth: 2,
+                        },
+                        beginAtZero: true,
+                    },
+                },
+            },
+        });
+    </script>
+</body>
+</html>
